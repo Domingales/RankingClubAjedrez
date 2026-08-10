@@ -1,5 +1,5 @@
 window.RANKING_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDOPvvZ4JTEDnnBRuyoqd0nh859HAol5y8",
+  key="AIzaSyDOPvvZ4JTEDnnBRuyoqd0nh859HAol5y8",
   authDomain: "rankingclubajedrez.firebaseapp.com",
   projectId: "rankingclubajedrez",
   storageBucket: "rankingclubajedrez.firebasestorage.app",
