@@ -16,9 +16,5 @@ window.RANKING_APP_CONFIG = {
   provisionalRD: 110,
   tau: 0.5,
   ratingPeriodDays: 1,
-
-  // Ajuste de color inspirado en Lichess: las negras reciben algo más de premio
-  // al superar una expectativa ligeramente inferior. Puede ponerse a 0 si el club
-  // prefiere Glicko-2 puro.
   whiteAdvantageRating: 25
 };
