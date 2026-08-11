@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+
+      // Cada socio crea únicamente su propia ficha inicial.
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'member'
+        && request.resource.data.rating == 1500
+        && request.resource.data.rd == 350;
+
+      // Club privado de confianza: cualquier socio autenticado puede participar
+      // en las transacciones que actualizan el rating de ambos jugadores.
+      // El campo role queda protegido salvo para administradores.
+      allow update: if signedIn()
+        && (isAdmin() || request.resource.data.role == resource.data.role);
+
+      allow delete: if isAdmin();
+    }
+
+    match /games/{gameId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.creatorUid == request.auth.uid
+        && (request.resource.data.whiteUid == request.auth.uid
+            || request.resource.data.blackUid == request.auth.uid)
+        && request.resource.data.status == 'pending';
+
+      // Cualquier participante puede confirmar/rechazar/cancelar desde la app.
+      // El administrador puede intervenir si hay una incidencia.
+      allow update: if signedIn()
+        && (isAdmin()
+            || resource.data.whiteUid == request.auth.uid
+            || resource.data.blackUid == request.auth.uid);
+
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
