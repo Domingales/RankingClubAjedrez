@@ -1,0 +1,36 @@
+RANKING CLUB AJEDREZ v2.4.0
+============================
+
+Esta versión mantiene Glicko-2 puro por periodos diarios, reloj de partida, perfil editable y la misma conexión Firebase que ya está funcionando.
+
+PARA ACTUALIZAR GITHUB PAGES
+1. Sustituye en el repositorio TODOS los archivos/carpetas por los de esta versión.
+2. Es imprescindible subir también:
+   - reset-password.html
+   - js/reset-password.js
+3. Haz Commit changes.
+4. Espera a que GitHub Pages publique el cambio.
+5. Recarga la app con Ctrl+F5 en ordenador o cerrando/reabriendo la página en móvil.
+
+FIREBASE / GOOGLE CLOUD
+- NO crees otra API key.
+- NO cambies Firestore.
+- NO vuelvas a publicar las reglas por esta actualización.
+- Mantén la clave actual que ya funciona en js/firebase-config.js.
+
+ÚNICO AJUSTE MANUAL NECESARIO PARA «HE OLVIDADO MI CONTRASEÑA»
+Consulta CONFIGURAR_RECUPERACION_FIREBASE.txt.
+Hay que indicar UNA VEZ a la plantilla de restablecimiento de contraseña de Firebase que utilice como manejador:
+
+https://domingales.github.io/RankingClubAjedrez/reset-password.html
+
+SEGURIDAD DE CONTRASEÑA
+- Usuario conectado y conoce su contraseña: Mi perfil > Editar datos > Cambiar contraseña. Se reautentica y la cambia directamente.
+- Usuario que ha olvidado su contraseña: «He olvidado mi contraseña» envía el correo. El enlace abre reset-password.html, verifica el código de un solo uso y permite crear una contraseña nueva.
+- El manejador propio ignora la apiKey incluida en la URL del correo y utiliza siempre la API key activa de js/firebase-config.js.
+
+PERFIL
+- Nombre visible en móvil y ordenador.
+- Nombre editable.
+- Correo de acceso solo lectura.
+- Rating, RD, volatilidad y estadísticas no editables.

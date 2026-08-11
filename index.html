@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>Ranking Club Ajedrez</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/chess.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <div id="bootScreen" class="boot-screen">
+    <div class="boot-card">
+      <div class="brand-mark">♞</div>
+      <h1>Ranking Club Ajedrez</h1>
+      <div id="bootStatus" class="boot-status">Comprobando sistema…</div>
+    </div>
+  </div>
+
+  <main id="authScreen" class="auth-shell hidden">
+    <section class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-mark">♞</div>
+        <div>
+          <h1>Ranking Club Ajedrez</h1>
+          <p>Clasificación histórica del club</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" type="button">Entrar</button>
+        <button id="tabRegister" class="auth-tab" type="button">Registrarse</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label>Email<input id="loginEmail" type="email" autocomplete="email" required></label>
+        <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required minlength="6"></label>
+        <button class="primary" type="submit">Iniciar sesión</button>
+        <button id="forgotPassword" class="link-btn" type="button">He olvidado mi contraseña</button>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <label>Nombre y apellidos<input id="registerName" type="text" required maxlength="60"></label>
+        <label>Email<input id="registerEmail" type="email" autocomplete="email" required></label>
+        <label>Contraseña<input id="registerPassword" type="password" autocomplete="new-password" required minlength="6"></label>
+        <label>Repetir contraseña<input id="registerPassword2" type="password" autocomplete="new-password" required minlength="6"></label>
+        <button class="primary" type="submit">Crear cuenta</button>
+        <p class="small-note">Los socios nuevos empiezan con 1500 de rating Glicko‑2 y rating provisional.</p>
+      </form>
+      <div id="authMessage" class="message hidden"></div>
+    </section>
+  </main>
+
+  <div id="appShell" class="app-shell hidden">
+    <header class="topbar">
+      <button id="menuButton" class="icon-btn" type="button" aria-label="Menú">☰</button>
+      <div class="topbar-title">
+        <strong>Ranking Club Ajedrez</strong>
+        <span id="syncStatus" class="status-chip">Conectando…</span>
+      </div>
+      <div class="topbar-user">
+        <button id="topUserName" class="top-user-name" type="button" title="Abrir mi perfil">👤 Usuario</button>
+        <button id="logoutButton" class="outline small" type="button">Salir</button>
+      </div>
+    </header>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand"><span>♞</span><strong>Club</strong></div>
+      <div class="sidebar-user-card" aria-label="Usuario conectado">
+        <div id="sidebarUserName" class="sidebar-user-name">Usuario</div>
+        <div id="sidebarUserEmail" class="sidebar-user-email"></div>
+      </div>
+      <nav id="navMenu">
+        <button data-view="dashboard" class="nav-item active">🏆 Clasificación</button>
+        <button data-view="newGame" class="nav-item">➕ Registrar partida</button>
+        <button data-view="clock" class="nav-item">⏱️ Reloj de partida</button>
+        <button data-view="pending" class="nav-item">⏳ Pendientes <span id="pendingBadge" class="badge hidden">0</span></button>
+        <button data-view="games" class="nav-item">♟ Partidas</button>
+        <button data-view="profile" class="nav-item">👤 Mi perfil</button>
+        <button data-view="players" class="nav-item">👥 Jugadores</button>
+        <button data-view="headToHead" class="nav-item">⚔️ Cara a cara</button>
+        <button data-view="records" class="nav-item">🏅 Récords</button>
+        <button data-view="admin" id="adminNav" class="nav-item hidden">👑 Administración</button>
+        <button data-view="help" class="nav-item">ℹ️ Ayuda</button>
+      </nav>
+      <div class="sidebar-footer">v<span id="appVersion">2.4.0</span></div>
+    </aside>
+
+    <section id="content" class="content">
+      <div id="globalMessage" class="message hidden"></div>
+
+      <section id="view-dashboard" class="view active">
+        <div class="page-head">
+          <div><h2>Clasificación general</h2><p>Actualizada en tiempo real con las partidas confirmadas.</p></div>
+          <div class="segmented"><button id="rankCurrentBtn" class="active">Actual</button><button id="rankPeakBtn">Máximo histórico</button></div>
+        </div>
+        <div class="summary-grid" id="clubSummary"></div>
+        <div class="card table-card"><div id="rankingTable"></div></div>
+        <div class="two-col">
+          <div class="card"><h3>Últimas partidas</h3><div id="recentGames"></div></div>
+          <div class="card"><h3>Tu situación</h3><div id="myQuickStats"></div></div>
+        </div>
+      </section>
+
+      <section id="view-newGame" class="view">
+        <div class="page-head"><div><h2>Registrar partida</h2><p>El rival deberá confirmarla antes de que cambie el ranking.</p></div></div>
+        <div class="card form-card">
+          <form id="gameForm" class="grid-form">
+            <label>Rival<select id="gameOpponent" required></select></label>
+            <label>Tu color<select id="gameMyColor"><option value="white">Blancas</option><option value="black">Negras</option></select></label>
+            <label>Resultado<select id="gameMyResult"><option value="win">He ganado</option><option value="draw">Tablas</option><option value="loss">He perdido</option></select></label>
+            <label>Fecha y hora<input id="gameDate" type="datetime-local" required></label>
+            <label>Ritmo<select id="gameTimeControl"><option>Clásica</option><option selected>Rápida</option><option>Blitz</option><option>Bullet</option><option>Amistosa</option></select></label>
+            <label>Competición / lugar<input id="gameEvent" type="text" maxlength="80" placeholder="Club, torneo, liga…"></label>
+            <label class="full">Enlace o nota opcional<input id="gameLink" type="text" maxlength="250" placeholder="Lichess, Chess.com, PGN, observación…"></label>
+            <div class="full"><button class="primary" type="submit">Guardar y enviar para confirmar</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="view-clock" class="view">
+        <div class="page-head">
+          <div><h2>Reloj de partida</h2><p>Reloj de ajedrez local con tiempo inicial e incremento por jugada.</p></div>
+        </div>
+
+        <div class="clock-layout">
+          <div class="card clock-settings">
+            <div class="clock-settings-head">
+              <div><h3>Configurar reloj</h3><p class="small-note">El incremento se añade al jugador después de pulsar su reloj al terminar la jugada.</p></div>
+              <div id="clockCategory" class="clock-category">Rápida · 10+0</div>
+            </div>
+
+            <div class="clock-presets" aria-label="Controles de tiempo rápidos">
+              <button type="button" class="clock-preset" data-minutes="1" data-increment="0">1+0</button>
+              <button type="button" class="clock-preset" data-minutes="3" data-increment="2">3+2</button>
+              <button type="button" class="clock-preset" data-minutes="5" data-increment="3">5+3</button>
+              <button type="button" class="clock-preset" data-minutes="10" data-increment="0">10+0</button>
+              <button type="button" class="clock-preset" data-minutes="10" data-increment="5">10+5</button>
+              <button type="button" class="clock-preset" data-minutes="15" data-increment="10">15+10</button>
+              <button type="button" class="clock-preset" data-minutes="30" data-increment="20">30+20</button>
+            </div>
+
+            <div class="clock-config-grid">
+              <label>Tiempo por jugador (min)
+                <input id="clockMinutes" type="number" min="0" max="300" step="1" value="10" inputmode="numeric">
+              </label>
+              <label>Incremento por jugada (s)
+                <input id="clockIncrement" type="number" min="0" max="120" step="1" value="0" inputmode="numeric">
+              </label>
+            </div>
+
+            <label class="clock-check"><input id="clockTableMode" type="checkbox"> <span>Modo mesa: girar 180° el reloj de negras</span></label>
+
+            <div class="clock-actions">
+              <button id="clockApplyBtn" class="outline" type="button">Aplicar</button>
+              <button id="clockStartBtn" class="primary" type="button">▶ Iniciar</button>
+              <button id="clockResetBtn" class="outline" type="button">↻ Reiniciar</button>
+              <button id="clockFullscreenBtn" class="outline" type="button">⛶ Pantalla completa</button>
+            </div>
+            <p class="small-note clock-tip">Al comenzar corre el reloj de Blancas. Después de mover, cada jugador pulsa su propio reloj para activar el del rival. El reloj funciona en este dispositivo y no modifica el rating ni guarda partidas automáticamente.</p>
+          </div>
+
+          <div id="chessClockStage" class="chess-clock-stage" aria-label="Reloj de ajedrez">
+            <button id="clockBlackFace" class="clock-face clock-black" type="button" aria-label="Reloj de negras">
+              <span class="clock-side">Negras</span>
+              <span id="clockBlackTime" class="clock-time">10:00</span>
+              <span id="clockBlackIncrement" class="clock-inc">+0 s</span>
+            </button>
+
+            <div class="clock-midbar">
+              <span id="clockStatus">Listo · empiezan Blancas</span>
+              <button id="clockStagePauseBtn" class="clock-mid-btn" type="button" title="Pausar o continuar">▶</button>
+              <button id="clockStageResetBtn" class="clock-mid-btn" type="button" title="Reiniciar">↻</button>
+              <button id="clockStageFullscreenBtn" class="clock-mid-btn" type="button" title="Pantalla completa">⛶</button>
+            </div>
+
+            <button id="clockWhiteFace" class="clock-face clock-white" type="button" aria-label="Reloj de blancas">
+              <span class="clock-side">Blancas</span>
+              <span id="clockWhiteTime" class="clock-time">10:00</span>
+              <span id="clockWhiteIncrement" class="clock-inc">+0 s</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-pending" class="view">
+        <div class="page-head"><div><h2>Partidas pendientes</h2><p>Confirma las partidas registradas por tus compañeros o revisa las que has enviado.</p></div></div>
+        <div id="pendingGames" class="stack"></div>
+      </section>
+
+      <section id="view-games" class="view">
+        <div class="page-head">
+          <div><h2>Histórico de partidas</h2><p>Registro completo del club.</p></div>
+          <div class="filters"><select id="gamesYear"></select><select id="gamesPlayer"><option value="all">Todos los jugadores</option></select></div>
+        </div>
+        <div class="card table-card"><div id="gamesTable"></div></div>
+      </section>
+
+      <section id="view-profile" class="view">
+        <div class="page-head profile-page-head">
+          <div><h2>Mi perfil</h2><p>Datos personales, evolución y estadísticas.</p></div>
+          <button id="editProfileBtn" class="outline" type="button">✏️ Editar datos</button>
+        </div>
+        <div id="profileHeader" class="profile-hero"></div>
+        <div id="profileStats" class="summary-grid"></div>
+        <div class="card"><div class="card-head"><h3>Evolución del rating</h3><span class="small-note">Las primeras partidas pueden mover mucho el rating porque el RD es alto.</span></div><canvas id="ratingChart" height="260"></canvas></div>
+        <div class="two-col"><div class="card"><h3>Últimas partidas</h3><div id="myRecentGames"></div></div><div class="card"><h3>Glicko‑2</h3><div id="glickoInfo"></div></div></div>
+      </section>
+
+      <section id="view-players" class="view">
+        <div class="page-head"><div><h2>Jugadores</h2><p>Ficha resumida de todos los socios.</p></div></div>
+        <div id="playersGrid" class="players-grid"></div>
+      </section>
+
+      <section id="view-headToHead" class="view">
+        <div class="page-head"><div><h2>Cara a cara</h2><p>Compara el historial de dos jugadores.</p></div></div>
+        <div class="card">
+          <div class="h2h-controls"><select id="h2hA"></select><span>vs</span><select id="h2hB"></select></div>
+          <div id="h2hResult"></div>
+        </div>
+      </section>
+
+      <section id="view-records" class="view">
+        <div class="page-head"><div><h2>Récords del club</h2><p>Marcas históricas y estadísticas destacadas.</p></div></div>
+        <div id="recordsGrid" class="records-grid"></div>
+      </section>
+
+      <section id="view-admin" class="view">
+        <div class="page-head"><div><h2>Administración</h2><p>Gestión básica de socios y partidas.</p></div></div>
+        <div class="two-col">
+          <div class="card"><h3>Socios</h3><div id="adminUsers"></div></div>
+          <div class="card"><h3>Herramientas</h3><p class="small-note">Para este club privado, los cálculos se realizan en el cliente y se guardan mediante transacciones de Firestore.</p><button id="adminRebuildBtn" class="danger-outline" type="button">Recalcular ranking desde el histórico</button></div>
+        </div>
+      </section>
+
+      <section id="view-help" class="view">
+        <div class="page-head"><div><h2>Ayuda</h2><p>Funcionamiento del ranking.</p></div></div>
+        <div class="card prose">
+          <h3>Cómo funciona</h3>
+          <p>Cada socio comienza con 1500 puntos. El sistema utiliza Glicko‑2, por lo que además del rating mantiene una desviación (RD) y una volatilidad. Cuando el RD supera 110, el rating aparece con un signo <strong>?</strong> porque aún es provisional.</p>
+          <p>Para registrar una partida, selecciona rival, color y resultado. El rival recibe la partida como pendiente. Cuando la confirma, la partida queda confirmada en Firestore y se recalcula el periodo Glicko‑2 de ese día para actualizar la clasificación en todos los dispositivos.</p>
+          <p>La app utiliza Glicko‑2 puro por periodos diarios. El color de las piezas se conserva como dato de la partida, pero no añade ni resta puntos por sí mismo; tampoco se utilizan factores K ni bonificaciones propias del club.</p>
+          <h3>Contraseña y recuperación</h3>
+          <p>Si conoces tu contraseña actual, puedes cambiarla desde <strong>Mi perfil → Editar datos → Cambiar contraseña</strong>. Si la has olvidado, usa <strong>He olvidado mi contraseña</strong>: el enlace del correo se abre en el formulario propio de Ranking Club Ajedrez y permite establecer una contraseña nueva.</p>
+          <h3>Acceso desde varios dispositivos</h3>
+          <p>La cuenta pertenece al usuario, no al dispositivo. Puedes entrar con el mismo email y contraseña desde ordenador, navegador móvil, tablet o APK Android.</p>
+          <h3>Reloj de partida</h3>
+          <p>El reloj permite elegir el tiempo inicial y el incremento por jugada, usar controles rápidos y jugar a pantalla completa. Al comenzar corre el reloj de Blancas. Después de cada jugada, el jugador pulsa su propio reloj: se añade el incremento configurado y comienza a descontar el tiempo del rival.</p>
+          <p>El reloj es una herramienta local del dispositivo: no registra el resultado ni modifica el ranking automáticamente.</p>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-card"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></div></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/glicko2.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
