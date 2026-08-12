@@ -11,7 +11,7 @@ window.RANKING_APP_CONFIG = {
   clubName: "Ranking Club Ajedrez",
   version: "2.4.0",
   initialRating: 1500,
-  initialRD: 350,
+  initialRD: 150,
   initialVolatility: 0.06,
   provisionalRD: 110,
   tau: 0.5,
