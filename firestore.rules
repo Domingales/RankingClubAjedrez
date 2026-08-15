@@ -1,0 +1,134 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function userRatingFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'rating', 'rd', 'volatility', 'maxRating', 'minRating',
+        'gamesPlayed', 'wins', 'draws', 'losses', 'score', 'lastGameAt',
+        'ratingPeriodKey', 'periodStartRating', 'periodStartRD',
+        'periodStartVolatility', 'periodStartMaxRating', 'periodStartMinRating',
+        'updatedAt'
+      ]);
+    }
+
+    function ownProfileFieldsOnly(uid) {
+      return request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt'])
+        && request.resource.data.name is string;
+    }
+
+    function gameRatingFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'ratingPeriodKey',
+        'ratingPeriodGameCountWhite', 'ratingPeriodGameCountBlack',
+        'whiteRatingBefore', 'blackRatingBefore',
+        'whiteRatingAfter', 'blackRatingAfter',
+        'whiteRDBefore', 'blackRDBefore',
+        'whiteRDAfter', 'blackRDAfter',
+        'whiteDelta', 'blackDelta',
+        'whiteExpected', 'blackExpected',
+        'updatedAt'
+      ]);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+
+      // Cada socio crea únicamente su propia ficha inicial.
+      // RD inicial del club: 150.
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'member'
+        && request.resource.data.rating == 1500
+        && request.resource.data.rd == 150;
+
+      // El propio usuario solo puede editar su nombre.
+      // Cualquier socio autenticado puede ejecutar exclusivamente las escrituras
+      // derivadas del cálculo Glicko-2; los datos personales y el rol quedan protegidos.
+      allow update: if signedIn()
+        && (isAdmin()
+            || ownProfileFieldsOnly(uid)
+            || userRatingFieldsOnly());
+
+      allow delete: if isAdmin();
+    }
+
+    match /games/{gameId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.creatorUid == request.auth.uid
+        && (request.resource.data.whiteUid == request.auth.uid
+            || request.resource.data.blackUid == request.auth.uid)
+        && request.resource.data.opponentUid != request.auth.uid
+        && (request.resource.data.opponentUid == request.resource.data.whiteUid
+            || request.resource.data.opponentUid == request.resource.data.blackUid)
+        && request.resource.data.status == 'pending';
+
+      // 1) El rival indicado puede confirmar una partida pendiente.
+      // 2) El rival indicado puede rechazarla.
+      // 3) El creador puede cancelarla mientras siga pendiente.
+      // 4) Una vez confirmada, cualquier socio autenticado puede escribir SOLO
+      //    los campos matemáticos derivados del recálculo Glicko-2 diario.
+      //    No puede alterar jugadores, resultado, fecha, estado ni autoría.
+      allow update: if signedIn()
+        && (
+          isAdmin()
+          || (
+            resource.data.status == 'pending'
+            && request.auth.uid == resource.data.opponentUid
+            && request.resource.data.status == 'confirmed'
+            && request.resource.data.confirmedBy == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'confirmedBy', 'confirmedAt', 'ratingPeriodKey', 'updatedAt'
+            ])
+          )
+          || (
+            resource.data.status == 'pending'
+            && request.auth.uid == resource.data.opponentUid
+            && request.resource.data.status == 'rejected'
+            && request.resource.data.rejectedBy == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'rejectedBy', 'updatedAt'
+            ])
+          )
+          || (
+            resource.data.status == 'pending'
+            && request.auth.uid == resource.data.creatorUid
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'updatedAt'
+            ])
+          )
+          || (
+            resource.data.status == 'confirmed'
+            && request.resource.data.status == 'confirmed'
+            && gameRatingFieldsOnly()
+          )
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
