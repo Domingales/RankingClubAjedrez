@@ -1,0 +1,9 @@
+{
+  "name": "Ranking Club Ajedrez",
+  "short_name": "Ranking Ajedrez",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "icons": [{"src":"./icons/chess.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
