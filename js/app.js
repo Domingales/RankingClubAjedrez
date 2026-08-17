@@ -1626,10 +1626,10 @@
     const best=by(u=>u.rating),peak=by(u=>u.maxRating),games=by(u=>u.gamesPlayed||0),wins=by(u=>u.wins||0);
     const eligible=us.filter(u=>Number(u.gamesPlayed||0)>=1);const pctBest=eligible.length?eligible.slice().sort((a,b)=>Number(scorePct(b))-Number(scorePct(a)))[0]:null;
     let upset=null;confirmedGames().forEach(g=>{if(g.result==='1/2-1/2')return;const winner=g.result==='1-0'?g.whiteUid:g.blackUid;const loser=winner===g.whiteUid?g.blackUid:g.whiteUid;const wr=winner===g.whiteUid?Number(g.whiteRatingBefore):Number(g.blackRatingBefore);const lr=loser===g.whiteUid?Number(g.whiteRatingBefore):Number(g.blackRatingBefore);const diff=lr-wr;if(diff>0&&(!upset||diff>upset.diff))upset={winner,loser,diff};});
-    const pctBestDetail=pctBest?`G${Number(pctBest.wins||0)} · J${Number(pctBest.gamesPlayed||0)} · P${Number(pctBest.losses||0)} · T${Number(pctBest.draws||0)}`:'';
+    const pctBestDetail=pctBest?`G${Number(pctBest.wins||0)} J${Number(pctBest.gamesPlayed||0)} P${Number(pctBest.losses||0)} T${Number(pctBest.draws||0)}`:'';
     const pctBestValue=pctBest?`${Number(scorePct(pctBest))%1===0?Number(scorePct(pctBest)).toFixed(0):scorePct(pctBest)}%`:'—';
     const rec=[['👑','Mayor rating actual',best.name,ratingLabel(best)],['🚀','Máximo histórico',peak.name,round(peak.maxRating)],['♟️','Más partidas',games.name,(games.gamesPlayed||0)+' PJ'],['🏆','Más victorias',wins.name,(wins.wins||0)+' victorias'],['🎯','Mejor porcentaje de puntos',pctBest?pctBest.name:'—',pctBestValue,pctBestDetail],['⚡','Mayor sorpresa',upset?playerName(upset.winner):'—',upset?`ganó con ${round(upset.diff)} puntos menos`:'—']];
-    $('recordsGrid').innerHTML=rec.map(r=>`<div class="record-card"><div class="icon">${r[0]}</div><div class="title">${r[1]}</div><div class="name">${esc(r[2])}</div><div class="value">${esc(r[3])}</div>${r[4]?`<div class="small-note" style="margin-top:6px">${esc(r[4])}</div>`:''}</div>`).join('');
+    $('recordsGrid').innerHTML=rec.map(r=>`<div class="record-card"><div class="icon">${r[0]}</div><div class="title">${r[1]}</div><div class="name">${esc(r[2])}</div><div class="value">${esc(r[3])}</div>${r[4]?`<div class="value" style="margin-top:6px;font-size:.95rem;letter-spacing:.02em">${esc(r[4])}</div>`:''}</div>`).join('');
   }
 
   function renderAdmin() {
